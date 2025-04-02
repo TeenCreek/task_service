@@ -8,14 +8,14 @@ app = FastAPI(title=settings.project_name)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=['*'],
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
 app.include_router(tasks.router)
 
 
-@app.get("/health")
+@app.get('/health')
 async def health_check():
-    return {"status": "ok"}
+    return {'status': 'ok'}

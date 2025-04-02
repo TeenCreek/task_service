@@ -10,22 +10,22 @@ from app.db.database import Base
 
 
 class TaskStatus(str, PyEnum):  # Use Python's Enum for defining enumerations
-    NEW = "NEW"
-    PENDING = "PENDING"
-    IN_PROGRESS = "IN_PROGRESS"
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-    CANCELLED = "CANCELLED"
+    NEW = 'NEW'
+    PENDING = 'PENDING'
+    IN_PROGRESS = 'IN_PROGRESS'
+    COMPLETED = 'COMPLETED'
+    FAILED = 'FAILED'
+    CANCELLED = 'CANCELLED'
 
 
 class TaskPriority(str, PyEnum):  # Use Python's Enum for defining enumerations
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
+    LOW = 'LOW'
+    MEDIUM = 'MEDIUM'
+    HIGH = 'HIGH'
 
 
 class Task(Base):
-    __tablename__ = "tasks"
+    __tablename__ = 'tasks'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
