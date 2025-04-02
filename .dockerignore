@@ -1,0 +1,50 @@
+# Исключить системные файлы и директории
+**/.DS_Store
+**/.git
+**/.gitignore
+**/.gitmodules
+
+# Исключить виртуальные окружения и зависимости
+venv/
+.env/
+.venv/
+env/
+*.pyc
+__pycache__/
+.pytest_cache/
+
+# Исключить логи и временные файлы
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Исключить IDE-специфичные файлы
+.vscode/
+.idea/
+
+# Исключить тестовые данные и документацию
+tests/
+test/
+docs/
+examples/
+
+# Исключить конфигурации разработки
+docker-compose.override.yml
+docker-compose.dev.yml
+
+# Исключить ненужные файлы для production
+*.md
+
+LICENSE
+.gitlab-ci.yml
+.travis.yml
+
+# Исключить большие бинарные файлы
+*.pdf
+*.jpg
+*.png
+
+# Исключить локальные настройки (если используются)
+local_settings.py
+.env.local
