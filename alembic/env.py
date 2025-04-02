@@ -1,34 +1,35 @@
-# alembic/env.py
 import os
 import sys
+
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+)
+
 from logging.config import fileConfig
 
-from alembic import context
-from app.db.database import Base  # Импортируем Base из app.db.database
-from app.db.database import sync_engine
-from app.models import Task  # Импортируем модель Task
+from sqlalchemy import create_engine
 
-# Добавляем корень проекта в путь поиска модулей
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
-)
+from alembic import context
+from app.core.config import settings
+from app.db.database import Base
 
 config = context.config
 section = config.config_ini_section
-db_url = config.get_section_option(section, "sqlalchemy.url")
-engine = sync_engine  # Используем синхронный движок для миграций
-target_metadata = (
-    Base.metadata
-)  # Это всё метаданные, включая все импорты моделей
+
+db_url = settings.sync_database_url
+config.set_section_option(section, "sqlalchemy.url", db_url)
+
+sync_engine = create_engine(db_url)
+
+target_metadata = Base.metadata
 
 
 def run_migrations_online():
-    connectable = engine
-    with connectable.connect() as connection:
+    """Запуск миграций в режиме онлайн."""
+
+    with sync_engine.connect() as connection:
         context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            **config.get_section(section)
+            connection=connection, target_metadata=target_metadata
         )
         with context.begin_transaction():
             context.run_migrations()

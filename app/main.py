@@ -13,6 +13,12 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
+
+@app.get('/')
+async def welcome():
+    return {'message': 'Welcome to Async Task Service'}
+
+
 app.include_router(tasks.router)
 
 

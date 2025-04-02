@@ -9,6 +9,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    networks:
+      - app_network
 
   worker:
     build: .
@@ -19,6 +21,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    networks:
+      - app_network
 
   db:
     image: postgres:14-alpine
@@ -33,17 +37,31 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - app_network
 
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:3.12-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     ports:
       - "5672:5672"
       - "15672:15672"
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics -q ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app_network
 
 volumes:
   postgres_data:
+  rabbitmq_data:
+
+networks:
+  app_network:
+    driver: bridge

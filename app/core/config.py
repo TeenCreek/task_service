@@ -1,4 +1,4 @@
-from pydantic import Field, PostgresDsn
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,15 +17,14 @@ class Settings(BaseSettings):
     )
 
     @property
-    def database_url(self) -> PostgresDsn:
-        return PostgresDsn.build(
-            scheme='postgresql+asyncpg',
-            username=self.db_user,
-            password=self.db_password,
-            host=self.db_host,
-            port=self.db_port,
-            path=self.db_name,
-        )
+    def database_url(self) -> str:
+        """Асинхронный URL базы данных."""
+        return f'postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}'
+
+    @property
+    def sync_database_url(self) -> str:
+        """Синхронный URL базы данных (для Alembic)."""
+        return f'postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}'
 
     model_config = SettingsConfigDict(
         env_file='.env', case_sensitive=True, extra='ignore'

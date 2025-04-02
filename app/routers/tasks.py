@@ -20,7 +20,7 @@ async def create_task(
     repo = TaskRepository(session)
     task = repo.model_from_schema(task_in)
     task = await repo.create(task)
-    await publish_task(str(task.id), task.priority.value)
+    await publish_task(str(task.id), task.priority.numeric)
     return TaskOut.from_orm(task)
 
 

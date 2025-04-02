@@ -59,7 +59,7 @@ async def process_task(session: AsyncSession, task_id: str):
             )
             await session.flush()
 
-            await asyncio.sleep(10 - task.priority.value * 2)
+            await asyncio.sleep(10 - task.priority.numeric * 2)
 
             await repo.update_status(
                 task,
