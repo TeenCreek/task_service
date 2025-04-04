@@ -12,6 +12,7 @@ from sqlalchemy import create_engine
 from alembic import context
 from app.core.config import settings
 from app.db.database import Base
+from app.models.task import *
 
 config = context.config
 section = config.config_ini_section

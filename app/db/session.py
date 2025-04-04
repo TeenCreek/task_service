@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import AsyncSessionLocal
 
 
-@asynccontextmanager
+# @asynccontextmanager
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         try:
