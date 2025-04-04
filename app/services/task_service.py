@@ -49,44 +49,46 @@ async def process_task(session: AsyncSession, task_id: str):
         return
 
     try:
-        async with session.begin():
-            task = await repo.get(task_uuid)
-            if not task or task.status != TaskStatus.PENDING:
-                logger.info(
-                    f'Task {task_id} is not in PENDING status, skipping.'
-                )
-                return
-            logger.info(
-                f'Starting task {task_id}. Updating status to IN_PROGRESS.'
-            )
-            await repo.update_status(
-                task,
-                TaskStatus.IN_PROGRESS,
-                started_at=datetime.now(timezone.utc),
-            )
-            await session.flush()
+        task = await repo.get(task_uuid)
+        if not task or task.status != TaskStatus.PENDING:
+            logger.info(f'Task {task_id} is not in PENDING status, skipping.')
+            return
 
-            logger.info(
-                f'Task {task_id} in progress, sleeping for {10 - task.priority.numeric * 2} seconds.'
-            )
-            await asyncio.sleep(10 - task.priority.numeric * 2)
+        logger.info(
+            f'Starting task {task_id}. Updating status to IN_PROGRESS.'
+        )
+        await repo.update_status(
+            task,
+            TaskStatus.IN_PROGRESS,
+            started_at=datetime.now(timezone.utc),
+        )
+        await session.commit()
 
-            logger.info(
-                f'Task {task_id} completed, updating status to COMPLETED.'
-            )
-            await repo.update_status(
-                task,
-                TaskStatus.COMPLETED,
-                completed_at=datetime.now(timezone.utc),
-                result='Task processed successfully',
-            )
-            logger.info(f'Task {task_id} completed successfully')
+        logger.info(
+            f'Task {task_id} in progress, sleeping for {10 - task.priority.numeric * 2} seconds.'
+        )
+        await asyncio.sleep(10 - task.priority.numeric * 2)
+
+        logger.info(f'Task {task_id} completed, updating status to COMPLETED.')
+        await repo.update_status(
+            task,
+            TaskStatus.COMPLETED,
+            completed_at=datetime.now(timezone.utc),
+            result='Task processed successfully',
+        )
+        await session.commit()
+
+        logger.info(f'Task {task_id} completed successfully')
 
     except Exception as e:
         logger.error(f'Task {task_id} failed: {str(e)}')
-        await repo.update_status(
-            task,
-            TaskStatus.FAILED,
-            completed_at=datetime.now(timezone.utc),
-            error=str(e),
-        )
+        if task:
+            await repo.update_status(
+                task,
+                TaskStatus.FAILED,
+                completed_at=datetime.now(timezone.utc),
+                error=str(e),
+            )
+            await session.commit()
+    finally:
+        logger.info(f'Task {task_id} process finished.')

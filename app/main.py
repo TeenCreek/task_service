@@ -15,17 +15,6 @@ app.add_middleware(
 )
 
 
-@app.get('/')
-async def welcome():
-    return {'message': 'Welcome to Async Task Service'}
-
-
 app.include_router(tasks.router)
-
-
-@app.get('/health')
-async def health_check():
-    return {'status': 'ok'}
-
 
 add_pagination(app)

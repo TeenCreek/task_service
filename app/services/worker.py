@@ -1,4 +1,3 @@
-# app/services/worker.py
 import asyncio
 import json
 
@@ -27,6 +26,7 @@ async def process_messages(connection: AbstractRobustConnection):
                     data = json.loads(message.body.decode())
                     async with AsyncSessionLocal() as session:
                         await process_task(session, data['task_id'])
+                        await session.commit()
                     await message.ack()
                 except Exception as e:
                     logger.error(f'Error processing message: {str(e)}')

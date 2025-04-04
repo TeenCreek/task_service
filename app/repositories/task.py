@@ -48,7 +48,7 @@ class TaskRepository:
 
     async def update_status(
         self, task: Task, new_status: TaskStatus, **kwargs
-    ) -> Task:
+    ):
         valid_transitions = {
             TaskStatus.NEW: [TaskStatus.PENDING, TaskStatus.CANCELLED],
             TaskStatus.PENDING: [TaskStatus.IN_PROGRESS, TaskStatus.CANCELLED],
@@ -65,7 +65,7 @@ class TaskRepository:
 
         task.status = new_status
 
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(task)
 
         return task
