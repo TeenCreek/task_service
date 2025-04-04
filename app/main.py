@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_pagination import add_pagination
 
 from app.core.config import settings
 from app.routers import tasks
@@ -25,3 +26,6 @@ app.include_router(tasks.router)
 @app.get('/health')
 async def health_check():
     return {'status': 'ok'}
+
+
+add_pagination(app)
