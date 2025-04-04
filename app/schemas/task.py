@@ -24,10 +24,11 @@ class TaskOut(BaseModel):
     result: str | None
     error: str | None
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}
 
 
 class TaskStatusOut(BaseModel):
     id: UUID
     status: TaskStatus
+
+    model_config = {'from_attributes': True}

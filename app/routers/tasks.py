@@ -20,8 +20,9 @@ async def create_task(
     repo = TaskRepository(session)
     task = repo.model_from_schema(task_in)
     task = await repo.create(task)
+    task = await repo.update_status(task, TaskStatus.PENDING)
     await publish_task(str(task.id), task.priority.numeric)
-    return TaskOut.from_orm(task)
+    return TaskOut.model_validate(task)
 
 
 @router.get('', response_model=Page[TaskOut])
@@ -31,7 +32,7 @@ async def list_tasks(
 ):
     repo = TaskRepository(session)
     tasks = await repo.list(status=status)
-    return paginate([TaskOut.from_orm(t) for t in tasks])
+    return paginate([TaskOut.model_validate(t) for t in tasks])
 
 
 @router.get('/{task_id}', response_model=TaskOut)
@@ -40,7 +41,7 @@ async def get_task(
 ):
     repo = TaskRepository(session)
     if task := await repo.get(task_id):
-        return TaskOut.from_orm(task)
+        return TaskOut.model_validate(task)
     raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Task not found')
 
 
@@ -60,7 +61,7 @@ async def cancel_task(
 
     try:
         task = await repo.update_status(task, TaskStatus.CANCELLED)
-        return TaskOut.from_orm(task)
+        return TaskOut.model_validate(task)
     except ValueError as e:
         raise HTTPException(status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -71,5 +72,5 @@ async def get_task_status(
 ):
     repo = TaskRepository(session)
     if task := await repo.get(task_id):
-        return TaskStatusOut(id=task.id, status=task.status)
+        return TaskStatusOut.model_validate(task)
     raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Task not found')

@@ -20,7 +20,6 @@ engine = create_async_engine(
     pool_pre_ping=True,
 )
 
-
 AsyncSessionLocal = async_sessionmaker(
     bind=engine, expire_on_commit=False, autoflush=False, class_=AsyncSession
 )

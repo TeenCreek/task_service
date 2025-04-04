@@ -1,6 +1,6 @@
 import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 import aio_pika
@@ -52,19 +52,32 @@ async def process_task(session: AsyncSession, task_id: str):
         async with session.begin():
             task = await repo.get(task_uuid)
             if not task or task.status != TaskStatus.PENDING:
+                logger.info(
+                    f'Task {task_id} is not in PENDING status, skipping.'
+                )
                 return
-
+            logger.info(
+                f'Starting task {task_id}. Updating status to IN_PROGRESS.'
+            )
             await repo.update_status(
-                task, TaskStatus.IN_PROGRESS, started_at=datetime.utcnow()
+                task,
+                TaskStatus.IN_PROGRESS,
+                started_at=datetime.now(timezone.utc),
             )
             await session.flush()
 
+            logger.info(
+                f'Task {task_id} in progress, sleeping for {10 - task.priority.numeric * 2} seconds.'
+            )
             await asyncio.sleep(10 - task.priority.numeric * 2)
 
+            logger.info(
+                f'Task {task_id} completed, updating status to COMPLETED.'
+            )
             await repo.update_status(
                 task,
                 TaskStatus.COMPLETED,
-                completed_at=datetime.utcnow(),
+                completed_at=datetime.now(timezone.utc),
                 result='Task processed successfully',
             )
             logger.info(f'Task {task_id} completed successfully')
@@ -74,6 +87,6 @@ async def process_task(session: AsyncSession, task_id: str):
         await repo.update_status(
             task,
             TaskStatus.FAILED,
-            completed_at=datetime.utcnow(),
+            completed_at=datetime.now(timezone.utc),
             error=str(e),
         )
