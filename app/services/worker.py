@@ -23,14 +23,15 @@ async def process_messages(connection: AbstractRobustConnection):
         async with queue.iterator() as queue_iter:
             async for message in queue_iter:
                 try:
-                    data = json.loads(message.body.decode())
                     async with AsyncSessionLocal() as session:
+                        data = json.loads(message.body.decode())
                         await process_task(session, data['task_id'])
                         await session.commit()
-                    await message.ack()
+                        await message.ack()
                 except Exception as e:
-                    logger.error(f'Error processing message: {str(e)}')
-                    await message.nack(requeue=False)
+                    logger.error(f'Error: {str(e)}')
+                    await message.nack(requeue=True)
+                    await asyncio.sleep(5)
 
 
 async def main():

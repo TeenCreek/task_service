@@ -13,16 +13,25 @@ from app.services.task_service import publish_task
 router = APIRouter(prefix='/api/v1/tasks', tags=['tasks'])
 
 
-@router.post('', response_model=TaskOut, status_code=201)
+@router.post('', response_model=TaskOut, status_code=status.HTTP_201_CREATED)
 async def create_task(
     task_in: TaskCreate, session: AsyncSession = Depends(get_db_session)
 ):
     repo = TaskRepository(session)
     task = repo.model_from_schema(task_in)
     task = await repo.create(task)
-    task = await repo.update_status(task, TaskStatus.PENDING)
-    await publish_task(str(task.id), task.priority.numeric)
-    return TaskOut.model_validate(task)
+
+    try:
+        task = await repo.update_status(task, TaskStatus.PENDING)
+        await publish_task(str(task.id), task.priority.numeric)
+        return TaskOut.model_validate(task)
+    except Exception as e:
+        await repo.update_status(task, TaskStatus.FAILED, error=str(e))
+        await session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f'Failed to publish task: {str(e)}',
+        )
 
 
 @router.get('', response_model=Page[TaskOut])

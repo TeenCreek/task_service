@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from sqlalchemy import Column, DateTime, String, Text
+from sqlalchemy import Column, DateTime, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.types import Enum as SqlEnum
 
@@ -25,8 +25,7 @@ class TaskPriority(str, PyEnum):
 
     @property
     def numeric(self) -> int:
-        mapping = {'LOW': 1, 'MEDIUM': 2, 'HIGH': 3}
-        return mapping[self.value]
+        return {'LOW': 1, 'MEDIUM': 2, 'HIGH': 3}[self.value]
 
 
 class Task(Base):
@@ -37,8 +36,8 @@ class Task(Base):
     description = Column(Text)
     priority = Column(SqlEnum(TaskPriority), default=TaskPriority.MEDIUM)
     status = Column(SqlEnum(TaskStatus), default=TaskStatus.NEW)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    started_at = Column(DateTime)
-    completed_at = Column(DateTime)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    started_at = Column(DateTime(timezone=True))
+    completed_at = Column(DateTime(timezone=True))
     result = Column(Text)
     error = Column(Text)

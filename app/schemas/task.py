@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.schemas.shared import TaskPriority, TaskStatus
+from app.models.task import TaskPriority, TaskStatus
 
 
 class TaskCreate(BaseModel):
@@ -28,7 +28,7 @@ class TaskOut(BaseModel):
 
 
 class TaskStatusOut(BaseModel):
-    id: UUID
     status: TaskStatus
+    id: UUID
 
     model_config = {'from_attributes': True}
