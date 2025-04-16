@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Optional, Sequence
 from uuid import UUID
 
 from sqlalchemy import select
@@ -21,8 +21,13 @@ class TaskRepository:
 
     async def create(self, task: Task) -> Task:
         self.session.add(task)
-        await self.session.commit()
-        await self.session.refresh(task)
+
+        try:
+            await self.session.commit()
+            await self.session.refresh(task)
+
+        except Exception as e:
+            raise ValueError(f'Error when creating a task: {str(e)}')
 
         return task
 
@@ -51,7 +56,11 @@ class TaskRepository:
     ):
         valid_transitions = {
             TaskStatus.NEW: [TaskStatus.PENDING, TaskStatus.CANCELLED],
-            TaskStatus.PENDING: [TaskStatus.IN_PROGRESS, TaskStatus.CANCELLED],
+            TaskStatus.PENDING: [
+                TaskStatus.IN_PROGRESS,
+                TaskStatus.CANCELLED,
+                TaskStatus.FAILED,
+            ],
             TaskStatus.IN_PROGRESS: [TaskStatus.COMPLETED, TaskStatus.FAILED],
         }
 

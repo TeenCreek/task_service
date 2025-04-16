@@ -19,10 +19,10 @@ class TaskOut(BaseModel):
     priority: TaskPriority
     status: TaskStatus
     created_at: datetime
-    started_at: datetime | None
-    completed_at: datetime | None
-    result: str | None
-    error: str | None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    result: str | None = None
+    error: str | None = None
 
     model_config = {'from_attributes': True}
 

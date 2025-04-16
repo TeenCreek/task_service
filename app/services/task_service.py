@@ -42,20 +42,58 @@ async def publish_task(task_id: str, priority: int):
         raise
 
 
+async def get_channel():
+    try:
+        async with connection_pool.acquire() as connection:
+            async with connection.channel() as channel:
+                return channel
+    except Exception as e:
+        logger.error(f'Failed to get channel: {str(e)}')
+        raise
+
+
 async def process_task(session: AsyncSession, task_id: str):
     repo = TaskRepository(session)
+    task = None
+
     try:
         task_uuid = UUID(task_id)
         task = await repo.get(task_uuid)
 
+        print(f'[WORKER] Got task: {task}')
+
         if not task or task.status != TaskStatus.PENDING:
             return
 
-        priority = TaskPriority(task.priority).numeric
+        # Безопасно извлекаем числовой приоритет
+        try:
+            if isinstance(task.priority, TaskPriority):
+                priority = task.priority.numeric
+            else:
+                priority = TaskPriority(task.priority).numeric
+        except ValueError as e:
+            logger.error(
+                f'[WORKER] Invalid priority for task {task.id}: {task.priority}'
+            )
+            await repo.update_status(
+                task,
+                TaskStatus.FAILED,
+                error=f'Invalid priority: {task.priority}',
+            )
+            await session.commit()
+            return
+
         await repo.update_status(
             task, TaskStatus.IN_PROGRESS, started_at=datetime.now(timezone.utc)
         )
-        await asyncio.sleep(10 - priority * 2)
+
+        print(f'[WORKER] Task {task.id} started with priority {priority}')
+
+        duration = max(1, 30 - priority * 2)
+        print(f'[WORKER] Sleeping for {duration} seconds')
+        await asyncio.sleep(duration)
+
+        print(f'[WORKER] Task {task.id} completed')
 
         await repo.update_status(
             task,
@@ -68,4 +106,5 @@ async def process_task(session: AsyncSession, task_id: str):
         if task:
             await repo.update_status(task, TaskStatus.FAILED, error=str(e))
     finally:
-        await session.commit()
+        if task:
+            await session.commit()
