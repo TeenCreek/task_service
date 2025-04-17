@@ -11,3 +11,4 @@ psycopg2-binary
 fastapi-pagination
 pytest
 pytest-asyncio
+httpx

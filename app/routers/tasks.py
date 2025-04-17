@@ -35,10 +35,11 @@ async def create_task(
     task = await repo.create(task)
 
     try:
-        task = await repo.update_status(task, TaskStatus.PENDING)
-        await publish_task(str(task.id), task.priority.numeric)
-        await session.commit()
+        await repo.update_status(task, TaskStatus.PENDING)
+        await publish_task(str(task.id), task.priority.numeric, session)
+
         return TaskOut.model_validate(task)
+
     except Exception as e:
         await handle_task_creation_error(task, repo, e, session)
         raise HTTPException(
