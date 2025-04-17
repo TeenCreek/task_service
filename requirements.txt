@@ -12,3 +12,4 @@ fastapi-pagination
 pytest
 pytest-asyncio
 httpx
+aiosqlite 

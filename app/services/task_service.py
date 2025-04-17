@@ -24,7 +24,6 @@ connection_pool = Pool(get_connection, max_size=10)
 
 async def publish_task(task_id: str, priority: int, session: AsyncSession):
     try:
-        # Создаем репозиторий для работы с задачами
         repo = TaskRepository(session)
 
         async with connection_pool.acquire() as connection:
@@ -33,20 +32,16 @@ async def publish_task(task_id: str, priority: int, session: AsyncSession):
                     QUEUE_NAME, durable=True, arguments={'x-max-priority': 10}
                 )
 
-                # Получаем задачу из репозитория
                 task = await repo.get(UUID(task_id))
 
-                # Если задача не существует, выходим
                 if not task:
                     logger.error(f'Task with ID {task_id} not found.')
                     return
 
-                # Если статус задачи не PENDING, переводим в PENDING
                 if task.status != TaskStatus.PENDING:
                     await repo.update_status(task, TaskStatus.PENDING)
                     await session.commit()
 
-                # Публикуем сообщение в очередь
                 message = aio_pika.Message(
                     body=json.dumps({'task_id': task_id}).encode(),
                     delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
@@ -74,7 +69,6 @@ async def process_task(session: AsyncSession, task_id: str):
         if not task:
             return
 
-        # переводим NEW -> PENDING
         if task.status == TaskStatus.NEW:
             await repo.update_status(task, TaskStatus.PENDING)
             await session.commit()

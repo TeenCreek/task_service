@@ -32,7 +32,6 @@ async def main():
                 task_id = data.get('task_id')
                 logger.info(f"Received message: {data}")
 
-                # для каждой итерации юзаем свою DB-сессию
                 async for session in get_db_session():
                     await process_task(session, task_id)
                     logger.info(f"Task {task_id} processed successfully.")
